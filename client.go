@@ -88,20 +88,20 @@ func (c *Client) Do(rr *RequestResponse) (status int, err error) {
 	// If we are making a GET request and the user populated the Params field, then
 	// add the params to the URL's querystring.
 	//
-	if rr.Method == "GET" && rr.Params != nil {
+	// TODO Make this work for a POST as well
+	if (rr.Method == "GET" || rr.Method == "POST") && rr.Params != nil {
 		vals := u.Query()
 		for k, v := range rr.Params {
 			vals.Set(k, v)
 		}
 		u.RawQuery = vals.Encode()
 	}
-	//
-	// Create a Request object; if populated, Data field is JSON encoded as request
-	// body
-	//
+
+	// Create a Request object
 	rr.Timestamp = time.Now()
 	m := string(rr.Method)
 	var req *http.Request
+
 	// http.NewRequest can only return an error if url.Parse fails.  Since the
 	// url has already been successfully parsed once at this point, there is no
 	// danger of this, so we can ignore errors returned by http.NewRequest.
@@ -122,6 +122,7 @@ func (c *Client) Do(rr *RequestResponse) (status int, err error) {
 		}
 		req.Header.Add("Content-Type", "application/json")
 	}
+
 	if rr.Header != nil {
 		for key, values := range *rr.Header {
 			if len(values) > 0 {
@@ -129,15 +130,15 @@ func (c *Client) Do(rr *RequestResponse) (status int, err error) {
 			}
 		}
 	}
-	//
+
 	// If Accept header is unset, set it for JSON.
-	//
+	// TODO What else should it be but JSON?
+	// What does requests use as a default?
 	if req.Header.Get("Accept") == "" {
 		req.Header.Add("Accept", "application/json")
 	}
-	//
+	
 	// Set HTTP Basic authentication if userinfo is supplied
-	//
 	if rr.Userinfo != nil {
 		if !c.UnsafeBasicAuth && u.Scheme != "https" {
 			err = errors.New("Unsafe to use HTTP Basic authentication without HTTPS")
@@ -146,9 +147,8 @@ func (c *Client) Do(rr *RequestResponse) (status int, err error) {
 		pwd, _ := rr.Userinfo.Password()
 		req.SetBasicAuth(rr.Userinfo.Username(), pwd)
 	}
-	//
+
 	// Execute the HTTP request
-	//
 	if c.Log {
 		log.Println("--------------------------------------------------------------------------------")
 		log.Println("REQUEST")
