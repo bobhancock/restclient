@@ -73,8 +73,10 @@ func New() *Client {
 }
 
 // Do executes a REST request.
-func (c *Client) Do(rr *RequestResponse) (status int, err error) {
+func (c *Client) Do(rr *RequestResponse, logit bool) (status int, err error) {
+	c.Log = logit
 	rr.Method = strings.ToUpper(rr.Method)
+
 	//
 	// Create a URL object from the raw url string.  This will allow us to compose
 	// query parameters programmatically and be guaranteed of a well-formed URL.
@@ -134,9 +136,9 @@ func (c *Client) Do(rr *RequestResponse) (status int, err error) {
 	// If Accept header is unset, set it for JSON.
 	// TODO What else should it be but JSON?
 	// What does requests use as a default?
-	if req.Header.Get("Accept") == "" {
-		req.Header.Add("Accept", "application/json")
-	}
+	// if req.Header.Get("Accept") == "" {
+		// req.Header.Add("Accept", "application/json")
+	// }
 	
 	// Set HTTP Basic authentication if userinfo is supplied
 	if rr.Userinfo != nil {
@@ -203,6 +205,6 @@ var (
 )
 
 // Do executes a REST request using the default client.
-func Do(rr *RequestResponse) (status int, err error) {
-	return defaultClient.Do(rr)
+func Do(rr *RequestResponse, log bool) (status int, err error) {
+	return defaultClient.Do(rr, log)
 }
